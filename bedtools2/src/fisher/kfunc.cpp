@@ -7,6 +7,11 @@
 
 #include "kfunc.h"
 
+#ifndef M_SQRT2
+// MinGW/UCRT64 does not expose this POSIX math constant by default.
+#define M_SQRT2 1.41421356237309504880
+#endif
+
 double kf_lgamma(double z)
 {
 	double x = 0;
@@ -278,6 +283,4 @@ double kt_fisher_exact(long long n11, long long n12, long long n21, long long n2
     *_left = left; *_right = right;
     return q;
 }
-
-
 

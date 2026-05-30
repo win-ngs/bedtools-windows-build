@@ -25,8 +25,8 @@ DEALINGS IN THE SOFTWARE.  */
 
 #include <config.h>
 
-// Windows (maybe more) lack a drand48 implementation.
-#ifndef HAVE_DRAND48
+// Windows (including MinGW/UCRT64) lacks drand48; use htslib's fallback there.
+#if !defined(HAVE_DRAND48) || (defined(_WIN32) && !defined(__CYGWIN__))
 #include "os/rand.c"
 #else
 #include <stdlib.h>

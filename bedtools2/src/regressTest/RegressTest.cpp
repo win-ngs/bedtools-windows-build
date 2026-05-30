@@ -5,6 +5,9 @@
 #include "lineFileUtilities.h"
 #include "ParseTools.h"
 #include <sys/stat.h>
+#ifdef _WIN32
+#include <direct.h>
+#endif
 #include <ctime>
 
 const string RegressTest::_hardOptsCmd = "HARD_OPTIONS";
@@ -68,7 +71,12 @@ bool RegressTest::init(int argc, char **argv)
 		}
 	}
 	_tmpDirname += timeStr;
+#ifdef _WIN32
+	// MinGW's mkdir() takes only a path; use the Windows-compatible wrapper.
+	int mkdirRetval = _mkdir(_tmpDirname.c_str());
+#else
 	int mkdirRetval = mkdir(_tmpDirname.c_str(), S_IRWXU | S_IRWXG | S_IRWXO ); //mkdir directory with all permissions allowed.
+#endif
 	if (mkdirRetval != 0) {
 		fprintf(stderr, "Error: Unable to create temporary output directory %s.\n", _tmpDirname.c_str());
 		return false;

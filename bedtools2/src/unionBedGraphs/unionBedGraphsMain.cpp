@@ -17,7 +17,6 @@
 #include <string>
 #include <iostream>
 #include <getopt.h>
-#include <libgen.h> //for basename()
 
 #include "GenomeFile.h"
 #include "unionBedGraphs.h"
@@ -32,7 +31,6 @@ using namespace std;
 #define PARAMETER_CHECK(param, paramLen, actualLen) (strncmp(argv[i], param, min(actualLen, paramLen))== 0) && (actualLen == paramLen)
 
 //STLized version of basename()
-// (because POSIX basename() modifies the input string pointer)
 // Additionally: removes any extension the basename might have.
 std::string ubg_stl_basename(const std::string& path);
 
@@ -277,12 +275,9 @@ void unionbedgraphs_showexamples()
 
 std::string ubg_stl_basename(const std::string& path)
 {
-    string result;
-
-    char* path_dup = strdup(path.c_str());
-    char* basename_part = basename(path_dup);
-    result = basename_part;
-    free(path_dup);
+    // UCRT64 is native Windows, so POSIX basename() would ignore '\' separators.
+    size_t start = path.find_last_of("/\\");
+    string result = (start == string::npos) ? path : path.substr(start + 1);
 
     size_t pos = result.find_last_of('.');
     if (pos != string::npos )
@@ -290,4 +285,3 @@ std::string ubg_stl_basename(const std::string& path)
 
     return result;
 }
-

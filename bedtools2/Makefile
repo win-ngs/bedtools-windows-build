@@ -42,6 +42,10 @@ endif
 
 BT_LDFLAGS =
 BT_LIBS    = -lz -lm -lbz2 -llzma -lpthread
+# MinGW builds pull Winsock symbols from htslib's socket helpers.
+ifneq (,$(findstring MINGW,$(shell uname -s)))
+BT_LIBS    += -lws2_32
+endif
 
 prefix ?= /usr/local
 

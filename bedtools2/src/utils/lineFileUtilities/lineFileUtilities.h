@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
+// GCC 16/UCRT64 no longer provides int64_t indirectly through other headers.
+#include <stdint.h>
 
 using namespace std;
 
@@ -95,4 +97,3 @@ void TokenizeColumns(const string &str, vector<CHRPOS> &elems)
 
 
 #endif /* LINEFILEUTILITIES_H */
-

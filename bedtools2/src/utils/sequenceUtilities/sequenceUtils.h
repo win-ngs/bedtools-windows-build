@@ -4,6 +4,8 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+// GCC 16/UCRT64 no longer provides int64_t indirectly through other headers.
+#include <stdint.h>
 
 using namespace std;
 

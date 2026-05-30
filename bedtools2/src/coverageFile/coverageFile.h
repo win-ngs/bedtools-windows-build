@@ -8,7 +8,6 @@
 #ifndef COVERAGEFILE_H_
 #define COVERAGEFILE_H_
 
-#include <stdio.h> // for asprintf
 #include "intersectFile.h"
 #include "ContextCoverage.h"
 

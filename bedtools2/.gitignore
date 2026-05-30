@@ -22,6 +22,7 @@ test/genomecov/pair-chip.bam
 test/genomecov/sam-w-del.bam
 test/genomecov/three_blocks.bam
 test/htsutil
+test/htsutil.exe
 test/multicov/one_block.bam.bai
 test/multicov/two_blocks.bam.bai
 test/genomecov/two_blocks.bam

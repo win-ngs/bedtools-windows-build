@@ -1,4 +1,6 @@
 #include <string>
+// GCC 16/UCRT64 no longer provides int32_t indirectly through <string>.
+#include <stdint.h>
 
 #ifndef BAMAUX_H
 #define BAMAUX_H
