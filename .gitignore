@@ -1,8 +1,0 @@
-dist/
-plan.md
-CLAUDE_CHANGE_REVIEW.md
-bedtools-test-*.log
-subset-*.log
-*-lf-check.out
-*-stdout.bam
-bedtools2/test/**/*.fai
