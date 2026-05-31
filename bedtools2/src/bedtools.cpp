@@ -17,8 +17,14 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <cstdio>
 #include "version.h"
 #include "BedtoolsDriver.h"
+
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 using namespace std;
 
@@ -37,6 +43,10 @@ using namespace std;
 bool sub_main(const string &subCmd);
 void showHelp(const string &subCmd);
 void showErrors(const string &errors);
+
+#ifdef _WIN32
+static void set_binary_standard_streams(void);
+#endif
 
 int annotate_main(int argc, char* argv[]);//
 int bamtobed_main(int argc, char* argv[]);//
@@ -108,6 +118,9 @@ int parse_global_args(int argc, char** argv) {
 
 int main(int argc, char *argv[])
 {
+#ifdef _WIN32
+	set_binary_standard_streams();
+#endif
 	argc = parse_global_args(argc, argv);
     // make sure the user at least entered a sub_command
     if (argc < 2) return bedtools_help();
@@ -211,6 +224,16 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
+
+#ifdef _WIN32
+static void set_binary_standard_streams(void)
+{
+    // Native UCRT64 text mode rewrites LF and can corrupt BAM data on stdio.
+    _setmode(_fileno(stdin), _O_BINARY);
+    _setmode(_fileno(stdout), _O_BINARY);
+    _setmode(_fileno(stderr), _O_BINARY);
+}
+#endif
 
 int bedtools_help(void)
 {

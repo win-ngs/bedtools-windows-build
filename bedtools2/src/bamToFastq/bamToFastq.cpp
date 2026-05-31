@@ -37,7 +37,8 @@ BamToFastq::~BamToFastq(void) {}
 
 void BamToFastq::SingleFastq() {
     // open the 1st fastq file for writing
-    _fq = new ofstream(_fastq1.c_str(), ios::out);
+    // UCRT64 text mode rewrites FASTQ newlines, which breaks byte-for-byte output.
+    _fq = new ofstream(_fastq1.c_str(), ios::out | ios::binary);
     if ( !*_fq ) {
         cerr << "Error: The first fastq file (" << _fastq1 << ") could not be opened.  Exiting!" << endl;
         exit (1);
@@ -68,13 +69,15 @@ void BamToFastq::SingleFastq() {
 
 void BamToFastq::PairedFastq() {
     // open the 1st fastq file for writing
-    _fq1 = new ofstream(_fastq1.c_str(), ios::out);
+    // UCRT64 text mode rewrites FASTQ newlines, which breaks byte-for-byte output.
+    _fq1 = new ofstream(_fastq1.c_str(), ios::out | ios::binary);
     if ( !*_fq1 ) {
         cerr << "Error: The first fastq file (" << _fastq1 << ") could not be opened.  Exiting!" << endl;
         exit (1);
     }
     // open the 2nd fastq file for writing
-    _fq2 = new ofstream(_fastq2.c_str(), ios::out);
+    // UCRT64 text mode rewrites FASTQ newlines, which breaks byte-for-byte output.
+    _fq2 = new ofstream(_fastq2.c_str(), ios::out | ios::binary);
     if ( !*_fq2 ) {
         cerr << "Error: The second fastq file (" << _fastq2 << ") could not be opened.  Exiting!" << endl;
         exit (1);
@@ -252,13 +255,15 @@ void BamToFastq::WritePairs(vector<BamAlignment> &alignments)
 void BamToFastq::PairedFastqUseTags() {
 
     // open the 1st fastq file for writing
-    _fq1 = new ofstream(_fastq1.c_str(), ios::out);
+    // UCRT64 text mode rewrites FASTQ newlines, which breaks byte-for-byte output.
+    _fq1 = new ofstream(_fastq1.c_str(), ios::out | ios::binary);
     if ( !*_fq1 ) {
         cerr << "Error: The first fastq file (" << _fastq1 << ") could not be opened.  Exiting!" << endl;
         exit (1);
     }
     // open the 2nd fastq file for writing
-    _fq2 = new ofstream(_fastq2.c_str(), ios::out);
+    // UCRT64 text mode rewrites FASTQ newlines, which breaks byte-for-byte output.
+    _fq2 = new ofstream(_fastq2.c_str(), ios::out | ios::binary);
     if ( !*_fq2 ) {
         cerr << "Error: The second fastq file (" << _fastq2 << ") could not be opened.  Exiting!" << endl;
         exit (1);
@@ -331,5 +336,4 @@ void BamToFastq::PairedFastqUseTags() {
     }
     reader.Close();
 }
-
 

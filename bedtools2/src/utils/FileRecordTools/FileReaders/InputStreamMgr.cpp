@@ -86,7 +86,8 @@ bool InputStreamMgr::init()
 			_isStdin = true;
 		}
 		
-		_inputFileStream = new ifstream(_filename.c_str());
+		// UCRT64 native text streams can translate bytes before BAM/BGZF detection.
+		_inputFileStream = new ifstream(_filename.c_str(), ios::in | ios::binary);
 		if (_inputFileStream->fail()) {
 			cerr << "Error: Unable to open file " << _filename << ". Exiting." << endl;
 			delete _inputFileStream;
@@ -323,10 +324,10 @@ bool InputStreamMgr::resetStream()
 	if (!_isBam && !_isStdin && !_isGzipped) {
 		//For non-compressed, non-stdin file input, just re-open the file.
 		delete _finalInputStream;
-		_finalInputStream = new ifstream(_filename.c_str());
+		// Keep reopened streams byte-preserving for native Windows builds.
+		_finalInputStream = new ifstream(_filename.c_str(), ios::in | ios::binary);
 		return true;
 	}
 	return false;
 }
-
 
