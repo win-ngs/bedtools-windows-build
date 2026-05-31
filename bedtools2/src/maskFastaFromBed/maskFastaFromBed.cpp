@@ -49,7 +49,8 @@ void MaskFastaFromBed::MaskFasta() {
     }
 
     // open the fasta database for reading
-    ofstream faOut(_fastaOutFile.c_str(), ios::out);
+    // Binary mode keeps LF line endings on Windows/UCRT64 (text mode emits CRLF).
+    ofstream faOut(_fastaOutFile.c_str(), ios::out | ios::binary);
     if ( !faOut ) {
         cerr << "Error: The requested fasta output file (" << _fastaOutFile << ") could not be opened. Exiting!" << endl;
         exit (1);

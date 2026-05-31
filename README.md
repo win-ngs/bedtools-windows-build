@@ -191,6 +191,7 @@ separate from the compile-only compatibility patch above.
 | standard streams | Set `stdin`, `stdout`, and `stderr` to binary mode on `_WIN32` at process startup | Native UCRT64 text mode rewrites LF to CRLF and can corrupt BAM data written through stdio |
 | generic input streams | Open regular input files with `ios::binary` in `InputStreamMgr` | Text-mode reads can alter bytes before BAM/BGZF detection and caused BAM inputs to be misclassified in `map`, `merge`, and `groupby` |
 | `bamtofastq` file outputs | Open FASTQ output files with `ios::binary` | `-fq` and `-fq2` write to files, not stdout, so startup stdio binary mode does not cover them |
+| `getfasta -fo` / `maskfasta` / `split` file outputs | Open the named output files in binary mode (`ios::binary`, `fopen "wb"`) | These tools write to named files rather than stdout, so the startup stdio binary mode does not cover them; text mode emitted CRLF (verified: getfasta `-fo` produced `\r\n`, LF after the fix) |
 | legacy `GenomeFile` parser | Initialize `_genomeLength` and parse chromosome sizes with `strtoll()` into `CHRPOS` | Win64/UCRT64 uses 32-bit `long`; `atol()` truncated hg19-sized coordinates and made `sample`/`shuffle` fail with `bad_alloc` or wrong seeded output |
 | `closest` context flags | Initialize `_forceUpstream` and `_forceDownstream` | Uninitialized bools made plain `closest` invocations behave as if `-fu` or `-fd` had been requested |
 | `coverage` context flags | Initialize `_mean` | Uninitialized bools made plain `coverage` invocations behave as if mutually exclusive output modes had been combined |
@@ -207,6 +208,9 @@ runtime issue:
 bedtools2/src/bedtools.cpp
 bedtools2/src/utils/FileRecordTools/FileReaders/InputStreamMgr.cpp
 bedtools2/src/bamToFastq/bamToFastq.cpp
+bedtools2/src/fastaFromBed/fastaFromBed.cpp
+bedtools2/src/maskFastaFromBed/maskFastaFromBed.cpp
+bedtools2/src/split/splitBed.cpp
 bedtools2/src/utils/GenomeFile/GenomeFile.cpp
 bedtools2/src/utils/Contexts/ContextClosest.cpp
 bedtools2/src/utils/Contexts/ContextCoverage.cpp

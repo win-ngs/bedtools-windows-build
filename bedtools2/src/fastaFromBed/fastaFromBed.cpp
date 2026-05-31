@@ -51,7 +51,8 @@ Bed2Fa::Bed2Fa(const string &dbFile,
         }
         else {
             fa.close();
-            _faOut = new ofstream(fastaOutFile.c_str(), ios::out);
+            // Binary mode keeps LF line endings on Windows/UCRT64 (text mode emits CRLF).
+            _faOut = new ofstream(fastaOutFile.c_str(), ios::out | ios::binary);
         }
     }
     // Extract the requested intervals from the FASTA input file.

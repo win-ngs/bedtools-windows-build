@@ -150,7 +150,8 @@ std::FILE* BedSplit::saveFileChunk(std::string& filename,size_t file_index)
     name << this->outfileprefix << '.'
          << setfill('0') << setw(5) << file_index+1 << ".bed";
     filename = name.str();
-    FILE* out = fopen(filename.c_str(),"w");
+    // Binary mode keeps LF line endings on Windows/UCRT64 ("w" text mode emits CRLF).
+    FILE* out = fopen(filename.c_str(),"wb");
     
     if(out==NULL)
         {
