@@ -5,8 +5,9 @@ This repository provides an unofficial Windows build of
 
 bedtools is a command-line toolkit for genomic interval operations. The
 upstream project is primarily built for Unix-like environments. This repository
-vendors the bedtools2 source tree and applies a small MSYS2-UCRT64
-compatibility patch so that `bedtools.exe` can be built and used on Windows.
+vendors bedtools v2.31.1 as a patched source tree in
+`bedtools-2.31.1-patch/` and applies a small MSYS2-UCRT64 compatibility patch
+so that `bedtools.exe` can be built and used on Windows.
 
 These builds are not produced, endorsed, or supported by the upstream bedtools
 project. For bedtools itself, see the upstream repository:
@@ -75,18 +76,19 @@ start.
 The patched source tree is included in this repository:
 
 ```text
-bedtools2/
+bedtools-2.31.1-patch/
 ```
 
 The upstream bedtools README and license are kept inside that directory:
 
 ```text
-bedtools2/README.md
-bedtools2/LICENSE
+bedtools-2.31.1-patch/README.md
+bedtools-2.31.1-patch/LICENSE
 ```
 
-Build outputs such as `bedtools2/bin/bedtools.exe`, `bedtools2/obj/`, and
-release ZIP files are not meant to be committed to git.
+Build outputs such as `bedtools-2.31.1-patch/bin/bedtools.exe`,
+`bedtools-2.31.1-patch/obj/`, and release ZIP files are not meant to be
+committed to git.
 
 ## Building from Source
 
@@ -109,14 +111,14 @@ pacman -S --needed \
 Build bedtools:
 
 ```sh
-cd /c/path/to/bedtools-windows-build/bedtools2
+cd /c/path/to/bedtools-windows-build/bedtools-2.31.1-patch
 make -j2
 ```
 
 The executable is created as:
 
 ```text
-bedtools2/bin/bedtools.exe
+bedtools-2.31.1-patch/bin/bedtools.exe
 ```
 
 ## Validation Performed
@@ -205,20 +207,20 @@ The modified source locations include comments explaining the Windows/UCRT64
 runtime issue:
 
 ```text
-bedtools2/src/bedtools.cpp
-bedtools2/src/utils/FileRecordTools/FileReaders/InputStreamMgr.cpp
-bedtools2/src/bamToFastq/bamToFastq.cpp
-bedtools2/src/fastaFromBed/fastaFromBed.cpp
-bedtools2/src/maskFastaFromBed/maskFastaFromBed.cpp
-bedtools2/src/split/splitBed.cpp
-bedtools2/src/utils/GenomeFile/GenomeFile.cpp
-bedtools2/src/utils/Contexts/ContextClosest.cpp
-bedtools2/src/utils/Contexts/ContextCoverage.cpp
-bedtools2/src/utils/Contexts/ContextBase.cpp
-bedtools2/src/utils/Contexts/ContextIntersect.cpp
-bedtools2/src/utils/Contexts/ContextComplement.cpp
-bedtools2/src/utils/bedFile/bedFile.cpp
-bedtools2/src/coverageFile/coverageFile.cpp
+bedtools-2.31.1-patch/src/bedtools.cpp
+bedtools-2.31.1-patch/src/utils/FileRecordTools/FileReaders/InputStreamMgr.cpp
+bedtools-2.31.1-patch/src/bamToFastq/bamToFastq.cpp
+bedtools-2.31.1-patch/src/fastaFromBed/fastaFromBed.cpp
+bedtools-2.31.1-patch/src/maskFastaFromBed/maskFastaFromBed.cpp
+bedtools-2.31.1-patch/src/split/splitBed.cpp
+bedtools-2.31.1-patch/src/utils/GenomeFile/GenomeFile.cpp
+bedtools-2.31.1-patch/src/utils/Contexts/ContextClosest.cpp
+bedtools-2.31.1-patch/src/utils/Contexts/ContextCoverage.cpp
+bedtools-2.31.1-patch/src/utils/Contexts/ContextBase.cpp
+bedtools-2.31.1-patch/src/utils/Contexts/ContextIntersect.cpp
+bedtools-2.31.1-patch/src/utils/Contexts/ContextComplement.cpp
+bedtools-2.31.1-patch/src/utils/bedFile/bedFile.cpp
+bedtools-2.31.1-patch/src/coverageFile/coverageFile.cpp
 ```
 
 After these fixes, the earlier BAM field-count failures in `groupby`, `map`,
@@ -302,8 +304,8 @@ The modified source locations include comments explaining that the change is
 for native Windows/UCRT64 path behavior:
 
 ```text
-bedtools2/src/multiIntersectBed/multiIntersectBedMain.cpp
-bedtools2/src/unionBedGraphs/unionBedGraphsMain.cpp
+bedtools-2.31.1-patch/src/multiIntersectBed/multiIntersectBedMain.cpp
+bedtools-2.31.1-patch/src/unionBedGraphs/unionBedGraphsMain.cpp
 ```
 
 The normal bedtools command path does not use a dispatcher executable that
@@ -351,7 +353,7 @@ the packaged executable:
 ## License
 
 bedtools is distributed under the MIT License. See [LICENSE.md](LICENSE.md) and
-[bedtools2/LICENSE](bedtools2/LICENSE).
+[bedtools-2.31.1-patch/LICENSE](bedtools-2.31.1-patch/LICENSE).
 
 Runtime DLLs included in release ZIP files come from MSYS2 packages and retain
 their respective upstream licenses. See

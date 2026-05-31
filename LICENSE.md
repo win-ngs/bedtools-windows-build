@@ -24,5 +24,5 @@ SOFTWARE.
 The upstream bedtools source license is also included in:
 
 ```text
-bedtools2/LICENSE
+bedtools-2.31.1-patch/LICENSE
 ```

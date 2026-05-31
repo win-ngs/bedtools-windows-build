@@ -67,28 +67,28 @@ bedtools
       Copyright (c) 2009-2019 Aaron Quinlan
 
     The upstream bedtools license text is included in:
-      bedtools2/LICENSE
+      bedtools-2.31.1-patch/LICENSE
 
 htslib
     The bedtools source tree vendors htslib under:
-      bedtools2/src/utils/htslib/
+      bedtools-2.31.1-patch/src/utils/htslib/
 
     License:
       MIT/Expat for files outside cram/
       Modified 3-Clause BSD for files within cram/
 
     The htslib license text is included in:
-      bedtools2/src/utils/htslib/LICENSE
+      bedtools-2.31.1-patch/src/utils/htslib/LICENSE
 
 gzstream
     The bedtools source tree vendors gzstream under:
-      bedtools2/src/utils/gzstream/
+      bedtools-2.31.1-patch/src/utils/gzstream/
 
     License:
       LGPL-2.1-or-later
 
     The gzstream license text is included in:
-      bedtools2/src/utils/gzstream/COPYING.LIB
+      bedtools-2.31.1-patch/src/utils/gzstream/COPYING.LIB
 
 
 MSYS2
