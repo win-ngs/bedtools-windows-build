@@ -42,7 +42,8 @@ CoverageFile::CoverageFile(ContextCoverage *context)
 
 CoverageFile::~CoverageFile() {
 	free(_depthArray);
-	delete _floatValBuf;
+	// _floatValBuf is allocated with new[] in the constructor.
+	delete[] _floatValBuf;
 }
 
 
