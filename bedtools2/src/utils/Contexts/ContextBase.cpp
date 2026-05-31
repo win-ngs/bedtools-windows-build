@@ -48,10 +48,14 @@ ContextBase::ContextBase()
   _printHeader(false),
   _printable(true),
   _explicitBedOutput(false),
+  // Uninitialized flow-control flags are UB; default sorted sweeps stop normally.
+  _runToQueryEnd(false),
   _queryFileIdx(-1),
   _bamHeaderAndRefIdx(-1),
   _maxNumDatabaseFields(0),
   _useFullBamTags(false),
+  // Default to normal BAM output unless determineOutputType() detects CRAM.
+  _isCram(false),
   _numOutputRecords(0),
   _hasConstantSeed(false),
   _seed(0),
@@ -813,4 +817,3 @@ bool ContextBase::strandedToolSupported() {
 	}
 	return true;
 }
-

@@ -8,7 +8,9 @@
 #include "ContextComplement.h"
 
 ContextComplement::ContextComplement()
+: _onlyChromsWithBedRecords(false)
 {
+	// Uninitialized, this can act as if -L was set and skip empty chromosomes.
 	setSortedInput(true);
 	setUseMergedIntervals(true);
 	setExplicitBedOutput(true);

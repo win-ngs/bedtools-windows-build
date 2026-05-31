@@ -84,6 +84,8 @@ Class methods
 // Constructor
 BedFile::BedFile(string &bedFile)
 : bedFile(bedFile),
+  // Uninitialized line counters are UB; UCRT64 exposed random diagnostics.
+  _lineNum(0),
   _isGff(false),
   _isVcf(false),
   _typeIsKnown(false),
@@ -96,7 +98,9 @@ BedFile::BedFile(string &bedFile)
 {}
 
 BedFile::BedFile(void)
-: _isGff(false),
+: // Uninitialized line counters are UB; UCRT64 exposed random diagnostics.
+  _lineNum(0),
+  _isGff(false),
   _isVcf(false),
   _typeIsKnown(false),
   _merged_start(-1),
@@ -808,5 +812,3 @@ BED * BedFile::sizeWeightedSearch(double val) {
     vector<BED>::iterator up = upper_bound(bedList.begin(), bedList.end(), val, CompareByWeight());
     return &(*up);
 }
-
-

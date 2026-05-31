@@ -8,8 +8,10 @@
 #include "ContextIntersect.h"
 
 ContextIntersect::ContextIntersect()
+: _splitBlockMgr(NULL), // Dead member; keep deterministic if reused later.
+  _shouldRunToDbEnd(false)
 {
-
+	// Uninitialized flow-control state can drain DB records before validation.
 }
 
 ContextIntersect::~ContextIntersect()
