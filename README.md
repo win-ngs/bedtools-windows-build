@@ -135,7 +135,33 @@ make clean
 make -j2
 bedtools.exe --version
 bedtools sort smoke test
+make test
 ```
+
+The final MSYS2-UCRT64 `make test` run was executed with:
+
+```text
+MSYSTEM=UCRT64
+make=/usr/bin/make
+g++=/ucrt64/bin/g++
+g++ -dumpmachine=x86_64-w64-mingw32
+_WIN32=1
+__MINGW64__=1
+```
+
+It reported:
+
+```text
+ok lines: 812
+canonical ...ok markers: 757
+skipped tests: 1 (merge.t44b, missing optional vcfSVtest.2.vcf)
+segmentation faults: 0
+bad_alloc failures: 0
+passing tools: bamtobed bamtofastq bed12tobed6 bedtobam bigchroms closest cluster complement coverage expand fisher flank general genomecov getfasta groupby intersect jaccard makewindows map merge multicov reldist sample shift shuffle slop sort spacing split subtract
+failing tools: negativecontrol
+```
+
+`negativecontrol` is expected by the upstream harness to fail.
 
 ## MSYS2-UCRT64 Compatibility Patch
 
@@ -154,6 +180,66 @@ with GCC 16.1.0. The patch is limited to Windows/MSYS2 compatibility fixes:
 
 The modified source locations include comments explaining the Windows/UCRT64
 change.
+
+## MSYS2-UCRT64 Runtime and Test Fixes
+
+The following fixes were found by running the upstream test data. They are
+separate from the compile-only compatibility patch above.
+
+| Area | Change | Reason |
+|---|---|---|
+| standard streams | Set `stdin`, `stdout`, and `stderr` to binary mode on `_WIN32` at process startup | Native UCRT64 text mode rewrites LF to CRLF and can corrupt BAM data written through stdio |
+| generic input streams | Open regular input files with `ios::binary` in `InputStreamMgr` | Text-mode reads can alter bytes before BAM/BGZF detection and caused BAM inputs to be misclassified in `map`, `merge`, and `groupby` |
+| `bamtofastq` file outputs | Open FASTQ output files with `ios::binary` | `-fq` and `-fq2` write to files, not stdout, so startup stdio binary mode does not cover them |
+| legacy `GenomeFile` parser | Initialize `_genomeLength` and parse chromosome sizes with `strtoll()` into `CHRPOS` | Win64/UCRT64 uses 32-bit `long`; `atol()` truncated hg19-sized coordinates and made `sample`/`shuffle` fail with `bad_alloc` or wrong seeded output |
+| `closest` context flags | Initialize `_forceUpstream` and `_forceDownstream` | Uninitialized bools made plain `closest` invocations behave as if `-fu` or `-fd` had been requested |
+| `coverage` context flags | Initialize `_mean` | Uninitialized bools made plain `coverage` invocations behave as if mutually exclusive output modes had been combined |
+| sweep flow-control flags | Initialize `_runToQueryEnd` and `_shouldRunToDbEnd` | Uninitialized flags could drain query/DB records before final sorted-input validation, which made `closest.t15` miss the expected error |
+| `complement` `-L` flag | Initialize `_onlyChromsWithBedRecords` | Uninitialized, it could behave as if `-L` was set and skip genome chromosomes with no input records |
+| base context CRAM state | Initialize `_isCram` | Default output is normal BAM unless input detection marks it as CRAM |
+| legacy `BedFile` line counter | Initialize `_lineNum` | Uninitialized line counters can produce random diagnostics when legacy readers report parse/order errors |
+| `coverage` buffer cleanup | Use `delete[]` for `_floatValBuf` | Valgrind found a `new[]`/`delete` mismatch in the `coverage` tool |
+
+The modified source locations include comments explaining the Windows/UCRT64
+runtime issue:
+
+```text
+bedtools2/src/bedtools.cpp
+bedtools2/src/utils/FileRecordTools/FileReaders/InputStreamMgr.cpp
+bedtools2/src/bamToFastq/bamToFastq.cpp
+bedtools2/src/utils/GenomeFile/GenomeFile.cpp
+bedtools2/src/utils/Contexts/ContextClosest.cpp
+bedtools2/src/utils/Contexts/ContextCoverage.cpp
+bedtools2/src/utils/Contexts/ContextBase.cpp
+bedtools2/src/utils/Contexts/ContextIntersect.cpp
+bedtools2/src/utils/Contexts/ContextComplement.cpp
+bedtools2/src/utils/bedFile/bedFile.cpp
+bedtools2/src/coverageFile/coverageFile.cpp
+```
+
+After these fixes, the earlier BAM field-count failures in `groupby`, `map`,
+and `merge`, the `jaccard` failure, the `sample`/`shuffle` `bad_alloc`
+failures, the `bamtofastq` CRLF file-output diff, and the plain
+`closest`/`coverage` false option errors were resolved. The final `closest.t15`
+and `complement.t5`/`complement.t10` outputs were also checked against Linux
+builds and matched byte-for-byte.
+
+Regular inputs are also opened in binary mode so the UCRT64 build matches Linux
+byte handling. CRLF text input is therefore not normalized by the Windows C
+runtime; a trailing `\r` can remain in text fields just as it would on Linux.
+Normalize CRLF BED/GFF/VCF files before exact byte comparisons when LF output is
+required.
+
+Upstream test harness adaptations:
+
+1. `complement`, `getfasta`, `intersect`, and `shuffle.t6` use Bash process
+   substitution such as `<(...)`, which becomes `/proc/<pid>/fd/<n>`. Native
+   UCRT64 `bedtools.exe` cannot open those MSYS pseudo paths. Use temporary
+   files when validating native Windows executables.
+2. BAM stdin tests should use bedtools' documented `-` form instead of MSYS
+   pseudo paths such as `/dev/stdin`.
+3. The sort-and-naming stderr checks were revalidated with the upstream
+   `2>&1 > /dev/null | ...` pipeline. No custom stderr retry wrapper is needed.
 
 ## MSYS2-UCRT64 Runtime Path Review
 
