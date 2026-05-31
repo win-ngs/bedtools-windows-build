@@ -8,6 +8,8 @@ set -e;
 # cggggggggg
 
 BT=${BT-../../bin/bedtools}
+TMPD=$(mktemp -d "${TMPDIR:-/tmp}/bedtools-getfasta.XXXXXX")
+trap 'rm -rf "$TMPD"' EXIT
 
 FAILURES=0;
 
@@ -216,7 +218,8 @@ rm obs exp
 echo -e "    getfasta.t134..\c"
 echo ">chr1:0-1
 a" > exp
-$BT getfasta -fi t.fa -bed <(echo -e "chr1\t0\t1") > obs
+printf "chr1\t0\t1\n" > "$TMPD/t134.bed"
+$BT getfasta -fi t.fa -bed "$TMPD/t134.bed" > obs
 check obs exp
 rm obs exp
 [[ $FAILURES -eq 0 ]] || exit 1;

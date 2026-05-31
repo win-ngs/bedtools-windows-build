@@ -6,6 +6,13 @@ STARTWD=$(pwd);
 TOOL_PASSES="";
 TOOL_FAILURES="";
 
+if [ -z "${BT+x}" ] && [ -x "${STARTWD}/../bin/bedtools.exe" ]; then
+    # Native UCRT64 test runs must execute the Windows image explicitly.
+    # Repeated launches through the extensionless PE file can diverge under
+    # MSYS Bash, while the packaged tool is bedtools.exe.
+    export BT="${STARTWD}/../bin/bedtools.exe"
+fi
+
 for tool in $(ls); do
     [ -d "${STARTWD}/${tool}" ] || continue;
     echo "Testing bedtools $tool:";

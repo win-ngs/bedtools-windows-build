@@ -2,6 +2,8 @@ set -e;
 
 BT=${BT-../../bin/bedtools}
 htsutil=${htsutil-../htsutil}
+TMPD=$(mktemp -d "${TMPDIR:-/tmp}/bedtools-intersect.XXXXXX")
+trap 'rm -rf "$TMPD"' EXIT
 
 FAILURES=0;
 
@@ -1065,7 +1067,9 @@ rm exp obs
 # BED        -----------
 echo -e "    intersect.t72...\c"
 echo "1	.	.	16	20	.	-	.	." > exp
-$BT intersect -a <(echo -e  "1\t.\t.\t10\t20\t.\t-\t.\t.") -b <(echo -e  "1\t15\t25") > obs
+printf "1\t.\t.\t10\t20\t.\t-\t.\t.\n" > "$TMPD/t72.a"
+printf "1\t15\t25\n" > "$TMPD/t72.b"
+$BT intersect -a "$TMPD/t72.a" -b "$TMPD/t72.b" > obs
 check exp obs
 rm exp obs
 
@@ -1073,7 +1077,9 @@ rm exp obs
 # GFF        -----------
 echo -e "    intersect.t73...\c"
 echo "1	15	20" > exp
-$BT intersect -a <(echo -e  "1\t15\t25") -b <(echo -e  "1\t.\t.\t10\t20\t.\t-\t.\t.")  > obs
+printf "1\t15\t25\n" > "$TMPD/t73.a"
+printf "1\t.\t.\t10\t20\t.\t-\t.\t.\n" > "$TMPD/t73.b"
+$BT intersect -a "$TMPD/t73.a" -b "$TMPD/t73.b" > obs
 check exp obs
 rm exp obs
 
@@ -1081,7 +1087,9 @@ rm exp obs
 # BED    -----------
 echo -e "    intersect.t74...\c"
 echo "1	.	.	15	20	.	-	.	." > exp
-$BT intersect -a <(echo -e  "1\t.\t.\t15\t25\t.\t-\t.\t.") -b <(echo -e  "1\t10\t20") > obs
+printf "1\t.\t.\t15\t25\t.\t-\t.\t.\n" > "$TMPD/t74.a"
+printf "1\t10\t20\n" > "$TMPD/t74.b"
+$BT intersect -a "$TMPD/t74.a" -b "$TMPD/t74.b" > obs
 check exp obs
 rm exp obs
 
@@ -1089,7 +1097,9 @@ rm exp obs
 # GFF    -----------
 echo -e "    intersect.t75...\c"
 echo "1	15	20" > exp
-$BT intersect  -a <(echo -e  "1\t15\t25") -b <(echo -e  "1\t.\t.\t10\t20\t.\t-\t.\t.") > obs
+printf "1\t15\t25\n" > "$TMPD/t75.a"
+printf "1\t.\t.\t10\t20\t.\t-\t.\t.\n" > "$TMPD/t75.b"
+$BT intersect  -a "$TMPD/t75.a" -b "$TMPD/t75.b" > obs
 check exp obs
 rm exp obs
 
@@ -1097,7 +1107,9 @@ rm exp obs
 # BED    -------------------
 echo -e "    intersect.t76...\c"
 echo "1	.	.	15	20	.	-	.	." > exp
-$BT intersect -a <(echo -e  "1\t.\t.\t15\t20\t.\t-\t.\t.") -b <(echo -e  "1\t10\t25") > obs
+printf "1\t.\t.\t15\t20\t.\t-\t.\t.\n" > "$TMPD/t76.a"
+printf "1\t10\t25\n" > "$TMPD/t76.b"
+$BT intersect -a "$TMPD/t76.a" -b "$TMPD/t76.b" > obs
 check exp obs
 rm exp obs
 
@@ -1105,7 +1117,9 @@ rm exp obs
 # GFF    --------------------
 echo -e "    intersect.t77...\c"
 echo "1	15	20" > exp
-$BT intersect -a <(echo -e "1\t15\t20") -b <(echo -e "1\t.\t.\t10\t25\t.\t-\t.\t.")  > obs
+printf "1\t15\t20\n" > "$TMPD/t77.a"
+printf "1\t.\t.\t10\t25\t.\t-\t.\t.\n" > "$TMPD/t77.b"
+$BT intersect -a "$TMPD/t77.a" -b "$TMPD/t77.b" > obs
 check exp obs
 rm exp obs
 
@@ -1113,7 +1127,9 @@ rm exp obs
 # BED    -------------------
 echo -e "    intersect.t78...\c"
 echo "1	.	.	16	20	.	-	.	." > exp
-$BT intersect -a <(echo -e "1\t.\t.\t10\t25\t.\t-\t.\t.") -b <(echo -e "1\t15\t20") > obs
+printf "1\t.\t.\t10\t25\t.\t-\t.\t.\n" > "$TMPD/t78.a"
+printf "1\t15\t20\n" > "$TMPD/t78.b"
+$BT intersect -a "$TMPD/t78.a" -b "$TMPD/t78.b" > obs
 check exp obs
 rm exp obs
 
@@ -1121,7 +1137,9 @@ rm exp obs
 # GFF    --------------------
 echo -e "    intersect.t79...\c"
 echo "1	14	20" > exp
-$BT intersect -a <(echo -e "1\t10\t25") -b <(echo -e "1\t.\t.\t15\t20\t.\t-\t.\t.")  > obs
+printf "1\t10\t25\n" > "$TMPD/t79.a"
+printf "1\t.\t.\t15\t20\t.\t-\t.\t.\n" > "$TMPD/t79.b"
+$BT intersect -a "$TMPD/t79.a" -b "$TMPD/t79.b" > obs
 check exp obs
 rm exp obs
 

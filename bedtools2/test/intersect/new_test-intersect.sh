@@ -1,5 +1,7 @@
 BT=${BT-../../bin/bedtools}
 htsutil=${htsutil-../htsutil}
+TMPD=$(mktemp -d "${TMPDIR:-/tmp}/bedtools-intersect-new.XXXXXX")
+trap 'rm -rf "$TMPD"' EXIT
 
 FAILURES=0;
 
@@ -15,7 +17,9 @@ check()
 
 bam_check() 
 {
-	if diff <($htsutil viewbamrecords $1) <($htsutil viewbamrecords $2)
+	$htsutil viewbamrecords "$1" > "$TMPD/bam_check_1"
+	$htsutil viewbamrecords "$2" > "$TMPD/bam_check_2"
+	if diff "$TMPD/bam_check_1" "$TMPD/bam_check_2"
 	then
 		echo ok
 	else
@@ -67,7 +71,7 @@ echo -e "    intersect.new.t04...\c"
 echo \
 "chr1	100	101	a2	2	-
 chr1	100	110	a2	2	-" > exp
-$BT intersect -a <(cat a.bed) -b b.bed > obs
+$BT intersect -a a.bed -b b.bed > obs
 check obs exp
 rm obs exp
 
@@ -115,7 +119,7 @@ echo -e "    intersect.new.t08...\c"
 echo \
 "chr1	100	101	a2	2	-
 chr1	100	110	a2	2	-" > exp
-$BT intersect -a <(cat a_gzipped.bed.gz) -b b.bed > obs
+$BT intersect -a a_gzipped.bed.gz -b b.bed > obs
 check obs exp
 rm obs exp
 
@@ -163,7 +167,7 @@ echo -e "    intersect.new.t12...\c"
 echo \
 "chr1	100	101	a2	2	-
 chr1	100	110	a2	2	-" > exp
-$BT intersect -a <(cat a_bgzipped.bed.gz) -b b.bed > obs
+$BT intersect -a a_bgzipped.bed.gz -b b.bed > obs
 check obs exp
 rm obs exp
 
@@ -199,7 +203,7 @@ rm obs
 #  Test intersection of a as bam from fifo vs b as bed from file
 ############################################################
 echo -e "    intersect.new.t16...\c"
-$BT intersect -a <(cat a.bam) -b b.bed > obs
+$BT intersect -a a.bam -b b.bed > obs
 bam_check obs aVSb.bam
 rm obs
 
@@ -374,7 +378,7 @@ echo -e "    intersect.new.t27...\c"
 echo \
 "chr1	100	101	a2	2	-
 chr1	100	110	a2	2	-" > exp
-$BT intersect -a <(cat a_withLargeHeader.bed) -b b.bed > obs
+$BT intersect -a a_withLargeHeader.bed -b b.bed > obs
 check obs exp
 rm obs exp
 
@@ -422,7 +426,7 @@ echo -e "    intersect.new.t31...\c"
 echo \
 "chr1	100	101	a2	2	-
 chr1	100	110	a2	2	-" > exp
-$BT intersect -a <(cat a_withLargeHeader_gzipped.bed.gz) -b b.bed > obs
+$BT intersect -a a_withLargeHeader_gzipped.bed.gz -b b.bed > obs
 check obs exp
 rm obs exp
 
@@ -470,7 +474,7 @@ echo -e "    intersect.new.t35...\c"
 echo \
 "chr1	100	101	a2	2	-
 chr1	100	110	a2	2	-" > exp
-$BT intersect -a <(cat a_withLargeHeader_bgzipped.bed.gz) -b b.bed > obs
+$BT intersect -a a_withLargeHeader_bgzipped.bed.gz -b b.bed > obs
 check obs exp
 rm obs exp
 
@@ -510,7 +514,7 @@ rm obs
 #  vs b as bed from file, and print header
 ############################################################
 echo -e "    intersect.new.t39...\c"
-$BT intersect -a <(cat a_withLargeHeader.bed) -b b.bed -header > obs
+$BT intersect -a a_withLargeHeader.bed -b b.bed -header > obs
 check obs aWithHeaderVsB.txt
 rm obs
 
@@ -550,7 +554,7 @@ rm obs
 #  fifo vs b as bed from file, and print header
 ############################################################
 echo -e "    intersect.new.t43...\c"
-$BT intersect -a <(cat a_withLargeHeader_gzipped.bed.gz) -b b.bed -header > obs
+$BT intersect -a a_withLargeHeader_gzipped.bed.gz -b b.bed -header > obs
 check obs aWithHeaderVsB.txt
 rm obs
 
@@ -590,7 +594,7 @@ rm obs
 #  fifo vs b as bed from file, and print header
 ############################################################
 echo -e "    intersect.new.t47...\c"
-$BT intersect -a <(cat a_withLargeHeader_bgzipped.bed.gz) -b b.bed -header > obs
+$BT intersect -a a_withLargeHeader_bgzipped.bed.gz -b b.bed -header > obs
 check obs aWithHeaderVsB.txt
 rm obs
 
@@ -968,7 +972,9 @@ rm exp obs
 ############################################################
 echo -e "    intersect.new.t78...\c"
 echo -e "@HD	VN:1.5	SO:coordinate" > exp
-echo "@HD	VN:1.5	SO:coordinate" | $htsutil samtobam - - | $BT intersect -a /dev/stdin -b b.bed | $htsutil viewbam >obs
+# Native UCRT64 executables cannot open MSYS /dev/stdin paths; use bedtools'
+# documented "-" stdin form so the same BAM stream is tested without /proc.
+echo "@HD	VN:1.5	SO:coordinate" | $htsutil samtobam - - | $BT intersect -a - -b b.bed | $htsutil viewbam >obs
 check exp obs
 rm exp obs
 [[ $FAILURES -eq 0 ]] || exit 1;

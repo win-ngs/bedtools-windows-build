@@ -1,5 +1,7 @@
 set -e;
 BT=${BT-../../bin/bedtools}
+TMPD=$(mktemp -d "${TMPDIR:-/tmp}/bedtools-shuffle.XXXXXX")
+trap 'rm -rf "$TMPD"' EXIT
 FAILURES=0;
 
 check()
@@ -135,7 +137,9 @@ rm obs exp
 ###############################################################
 echo -e "    shuffle.t6...\c"
 echo "Error, line 1: tried 1000 potential loci for entry, but could not avoid excluded regions.  Ignoring entry and moving on." > exp
-$BT shuffle -i <(echo -e "chr1\t0\t110") -g <(echo -e "chr1\t100") &> obs
+printf "chr1\t0\t110\n" > "$TMPD/t6.i"
+printf "chr1\t100\n" > "$TMPD/t6.g"
+$BT shuffle -i "$TMPD/t6.i" -g "$TMPD/t6.g" &> obs
 check obs exp
 rm obs exp
 [[ $FAILURES -eq 0 ]] || exit 1;
