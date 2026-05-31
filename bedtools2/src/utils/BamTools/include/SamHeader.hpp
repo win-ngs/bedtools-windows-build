@@ -8,6 +8,13 @@
 #include <api/BamAux.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
+// UCRT64 exposes the ISO C name _strdup rather than POSIX strdup in C++ mode.
+#define BT_STRDUP _strdup
+#else
+#define BT_STRDUP strdup
+#endif
+
 
 #ifdef WITH_HTS_CB_API
 #include <htslib/hfile.h>
@@ -34,7 +41,7 @@ namespace htslib_future {
 		hts_close(fp);
 
 		hdr->l_text = (uint32_t)buffer->length();
-		hdr->text = strdup(buffer->c_str());
+		hdr->text = BT_STRDUP(buffer->c_str());
 		delete buffer;
 
 		return 0;
@@ -105,7 +112,7 @@ namespace BamTools {
 		void ParseHeaderText(const std::string& text)
 		{
 			_header = sam_hdr_parse((int)text.length(), text.c_str());
-			_header->text = strdup(text.c_str());
+			_header->text = BT_STRDUP(text.c_str());
 			_header->l_text = (uint32_t)text.length();
 		}
 		void destory() 
