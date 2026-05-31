@@ -13,18 +13,26 @@
 #include "GenomeFile.h"
 
 
-GenomeFile::GenomeFile(const string &genomeFile) {
-    _genomeFile = genomeFile;
+GenomeFile::GenomeFile(const string &genomeFile)
+: _genomeFile(genomeFile)
+, _genomeLength(0)
+{
+    // Leaving this member uninitialized is UB; UCRT64 exposed it in random tools.
     loadGenomeFileIntoMap();
 }
 
-GenomeFile::GenomeFile(const RefVector &genome) {
+GenomeFile::GenomeFile(const RefVector &genome)
+: _genomeLength(0)
+{
+    // Keep BAM-derived offsets initialized before projectOnGenome() uses them.
     for (size_t i = 0; i < genome.size(); ++i) {
         string chrom = genome[i].RefName;
-        int length = genome[i].RefLength;
+        CHRPOS length = genome[i].RefLength;
         
         _chromSizes[chrom] = length;
         _chromList.push_back(chrom);
+        _startOffsets.push_back(_genomeLength);
+        _genomeLength += length;
     }
 }
 
@@ -57,14 +65,15 @@ void GenomeFile::loadGenomeFileIntoMap() {
                 // we need at least 2 columns
                 if (genomeFields.size() >= 2) {
                     char *p2End;
-                    long c2;
+                    CHRPOS c2;
                     // make sure the second column is numeric.
-                    c2 = strtol(genomeFields[1].c_str(), &p2End, 10);
+                    c2 = strtoll(genomeFields[1].c_str(), &p2End, 10);
 
-                    // strtol  will set p2End to the start of the string if non-integral, base 10
+                    // strtoll will set p2End to the start of the string if non-integral, base 10
                     if (p2End != genomeFields[1].c_str()) {
                         string chrom       = genomeFields[0];
-                        CHRPOS size           = atol(genomeFields[1].c_str());
+                        // UCRT64 long is 32-bit, so keep chromosome sizes in CHRPOS.
+                        CHRPOS size        = c2;
                         _chromSizes[chrom] = size;
                         _chromList.push_back(chrom);
                         _startOffsets.push_back(_genomeLength);
