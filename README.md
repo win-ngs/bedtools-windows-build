@@ -241,6 +241,41 @@ Upstream test harness adaptations:
 3. The sort-and-naming stderr checks were revalidated with the upstream
    `2>&1 > /dev/null | ...` pipeline. No custom stderr retry wrapper is needed.
 
+## Potential Upstream Bugs (Not Windows-Specific)
+
+Some of the fixes above address latent defects in the upstream bedtools source
+that are **not** specific to Windows. They are undefined behavior on every
+platform and only appear to work on Linux because freshly allocated memory
+often reads as zero there, and because the common allocator happens to tolerate
+the `new[]`/`delete` mismatch. A different compiler, optimization level, or
+allocator could expose them anywhere. They are highlighted here for upstream
+awareness:
+
+- **Member variables read before initialization** (UB). Each is declared in its
+  class but never set in the constructor, only later via an option handler or
+  setter:
+  - `ContextIntersect::_shouldRunToDbEnd` — most impactful. When it reads as
+    true, DB records are drained before sorted-input validation, suppressing the
+    expected sort-order error (seen as `closest.t15`).
+  - `ContextBase::_runToQueryEnd`, `ContextBase::_isCram`
+  - `ContextClosest::_forceUpstream`, `ContextClosest::_forceDownstream`
+  - `ContextCoverage::_mean`
+  - `ContextComplement::_onlyChromsWithBedRecords`
+  - `BedFile::_lineNum`
+- **`GenomeFile::_genomeLength` used uninitialized**: the file constructor
+  accumulates into it without first setting it to 0, and the BAM-header
+  (`RefVector`) constructor never builds `_startOffsets`, so `projectOnGenome()`
+  can index an empty vector.
+- **`new[]`/`delete` mismatch in the `coverage` tool**:
+  `CoverageFile::_floatValBuf` is allocated with `new char[]` but freed with
+  scalar `delete` (found by Valgrind).
+
+These were confirmed by building the same patched source on Linux/WSL: the
+relevant outputs match the unmodified upstream build byte-for-byte, so the fixes
+do not change correct Linux behavior — they only remove the latent undefined
+behavior. (The separate `strtoll`/`CHRPOS` change in `GenomeFile` is a genuine
+Win64 LLP64 concern, where `long` is 32-bit, and is not listed here.)
+
 ## MSYS2-UCRT64 Runtime Path Review
 
 The following review is separate from the compile-fix patch above. MSYS2-UCRT64
