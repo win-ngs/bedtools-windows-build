@@ -1,4 +1,4 @@
-# bedtools for Windows: Unofficial Community Build
+# BEDTools for windows: Community-built binary
 
 This repository provides an unofficial Windows build of
 [bedtools](https://github.com/arq5x/bedtools2) v2.31.1.
@@ -86,10 +86,6 @@ bedtools-2.31.1-patch/README.md
 bedtools-2.31.1-patch/LICENSE
 ```
 
-Build outputs such as `bedtools-2.31.1-patch/bin/bedtools.exe`,
-`bedtools-2.31.1-patch/obj/`, and release ZIP files are not meant to be
-committed to git.
-
 ## Building from Source
 
 You do not need to build bedtools yourself if you only want to use the released
@@ -112,7 +108,7 @@ Build bedtools:
 
 ```sh
 cd /c/path/to/bedtools-windows-build/bedtools-2.31.1-patch
-make -j2
+make
 ```
 
 The executable is created as:
@@ -134,7 +130,7 @@ The following checks were run:
 
 ```text
 make clean
-make -j2
+make
 bedtools.exe --version
 bedtools sort smoke test
 make test
@@ -170,15 +166,15 @@ failing tools: negativecontrol
 The upstream bedtools v2.31.1 source did not compile unchanged in MSYS2-UCRT64
 with GCC 16.1.0. The patch is limited to Windows/MSYS2 compatibility fixes:
 
-| Area | Change | Reason |
+| File | Change | Reason |
 |---|---|---|
-| C/C++ fixed-width integer headers | Added direct `<stdint.h>` includes where public fixed-width integer types are used | GCC 16/UCRT64 no longer provides these typedefs reliably through unrelated indirect includes |
-| `coverageFile` formatting | Replaced GNU `asprintf()` formatting with C++ stream formatting | MinGW/UCRT64 does not provide GNU `asprintf()` |
-| large-file offset support | Replaced `__int64_t` with `int64_t` for Windows `off_type` | `__int64_t` is not a portable MinGW/UCRT64 type name |
-| Fisher exact support | Added a local `M_SQRT2` fallback | MinGW/UCRT64 does not expose this POSIX math constant by default |
-| regression test helper | Used `_mkdir()` on Windows | MinGW's `mkdir()` takes only a path argument |
-| vendored htslib | Kept Windows builds on htslib's bundled `drand48` fallback | MinGW/UCRT64 lacks `drand48()` |
-| linking | Added `-lws2_32` for MinGW builds | htslib's socket helpers reference Winsock APIs |
+| `src/utils/BamTools/include/api/BamAux.h`<br>`src/utils/lineFileUtilities/lineFileUtilities.h`<br>`src/utils/sequenceUtilities/sequenceUtils.h` | Added direct `<stdint.h>` includes where public fixed-width integer types are used | GCC 16/UCRT64 no longer provides these typedefs reliably through unrelated indirect includes |
+| `src/coverageFile/coverageFile.cpp` | Replaced GNU `asprintf()` formatting with C++ stream formatting | MinGW/UCRT64 does not provide GNU `asprintf()` |
+| `src/nucBed/LargeFileSupport.h`<br>`src/utils/Fasta/LargeFileSupport.h` | Replaced `__int64_t` with `int64_t` for Windows `off_type` | `__int64_t` is not a portable MinGW/UCRT64 type name |
+| `src/fisher/kfunc.cpp` | Added a local `M_SQRT2` fallback | MinGW/UCRT64 does not expose this POSIX math constant by default |
+| `src/regressTest/RegressTest.cpp` | Used `_mkdir()` on Windows | MinGW's `mkdir()` takes only a path argument |
+| `src/utils/htslib/Makefile`<br>`src/utils/htslib/hts_os.c` | Kept Windows builds on htslib's bundled `drand48` fallback | MinGW/UCRT64 lacks `drand48()` |
+| `Makefile` | Added `-lws2_32` for MinGW builds | htslib's socket helpers reference Winsock APIs |
 
 The modified source locations include comments explaining the Windows/UCRT64
 change.
@@ -188,39 +184,39 @@ change.
 The following fixes were found by running the upstream test data. They are
 separate from the compile-only compatibility patch above.
 
-| Area | Change | Reason |
+| File | Change | Reason |
 |---|---|---|
-| standard streams | Set `stdin`, `stdout`, and `stderr` to binary mode on `_WIN32` at process startup | Native UCRT64 text mode rewrites LF to CRLF and can corrupt BAM data written through stdio |
-| generic input streams | Open regular input files with `ios::binary` in `InputStreamMgr` | Text-mode reads can alter bytes before BAM/BGZF detection and caused BAM inputs to be misclassified in `map`, `merge`, and `groupby` |
-| `bamtofastq` file outputs | Open FASTQ output files with `ios::binary` | `-fq` and `-fq2` write to files, not stdout, so startup stdio binary mode does not cover them |
-| `getfasta -fo` / `maskfasta` / `split` file outputs | Open the named output files in binary mode (`ios::binary`, `fopen "wb"`) | These tools write to named files rather than stdout, so the startup stdio binary mode does not cover them; text mode emitted CRLF (verified: getfasta `-fo` produced `\r\n`, LF after the fix) |
-| legacy `GenomeFile` parser | Initialize `_genomeLength` and parse chromosome sizes with `strtoll()` into `CHRPOS` | Win64/UCRT64 uses 32-bit `long`; `atol()` truncated hg19-sized coordinates and made `sample`/`shuffle` fail with `bad_alloc` or wrong seeded output |
-| `closest` context flags | Initialize `_forceUpstream` and `_forceDownstream` | Uninitialized bools made plain `closest` invocations behave as if `-fu` or `-fd` had been requested |
-| `coverage` context flags | Initialize `_mean` | Uninitialized bools made plain `coverage` invocations behave as if mutually exclusive output modes had been combined |
-| sweep flow-control flags | Initialize `_runToQueryEnd` and `_shouldRunToDbEnd` | Uninitialized flags could drain query/DB records before final sorted-input validation, which made `closest.t15` miss the expected error |
-| `complement` `-L` flag | Initialize `_onlyChromsWithBedRecords` | Uninitialized, it could behave as if `-L` was set and skip genome chromosomes with no input records |
-| base context CRAM state | Initialize `_isCram` | Default output is normal BAM unless input detection marks it as CRAM |
-| legacy `BedFile` line counter | Initialize `_lineNum` | Uninitialized line counters can produce random diagnostics when legacy readers report parse/order errors |
-| `coverage` buffer cleanup | Use `delete[]` for `_floatValBuf` | Valgrind found a `new[]`/`delete` mismatch in the `coverage` tool |
+| `src/bedtools.cpp` | Set `stdin`, `stdout`, and `stderr` to binary mode on `_WIN32` at process startup | Native UCRT64 text mode rewrites LF to CRLF and can corrupt BAM data written through stdio |
+| `src/utils/FileRecordTools/FileReaders/InputStreamMgr.cpp` | Open regular input files with `ios::binary` in `InputStreamMgr` | Text-mode reads can alter bytes before BAM/BGZF detection and caused BAM inputs to be misclassified in `map`, `merge`, and `groupby` |
+| `src/bamToFastq/bamToFastq.cpp` | Open FASTQ output files with `ios::binary` | `-fq` and `-fq2` write to files, not stdout, so startup stdio binary mode does not cover them |
+| `src/fastaFromBed/fastaFromBed.cpp`<br>`src/maskFastaFromBed/maskFastaFromBed.cpp`<br>`src/split/splitBed.cpp` | Open the named output files in binary mode (`ios::binary`, `fopen "wb"`) | These tools write to named files rather than stdout, so the startup stdio binary mode does not cover them; text mode emitted CRLF (verified: getfasta `-fo` produced `\r\n`, LF after the fix) |
+| `src/utils/GenomeFile/GenomeFile.cpp` | Initialize `_genomeLength` and parse chromosome sizes with `strtoll()` into `CHRPOS` | Win64/UCRT64 uses 32-bit `long`; `atol()` truncated hg19-sized coordinates and made `sample`/`shuffle` fail with `bad_alloc` or wrong seeded output |
+| `src/utils/Contexts/ContextClosest.cpp` | Initialize `_forceUpstream` and `_forceDownstream` | Uninitialized bools made plain `closest` invocations behave as if `-fu` or `-fd` had been requested |
+| `src/utils/Contexts/ContextCoverage.cpp` | Initialize `_mean` | Uninitialized bools made plain `coverage` invocations behave as if mutually exclusive output modes had been combined |
+| `src/utils/Contexts/ContextBase.cpp`<br>`src/utils/Contexts/ContextIntersect.cpp` | Initialize `_runToQueryEnd` and `_shouldRunToDbEnd` | Uninitialized flags could drain query/DB records before final sorted-input validation, which made `closest.t15` miss the expected error |
+| `src/utils/Contexts/ContextComplement.cpp` | Initialize `_onlyChromsWithBedRecords` | Uninitialized, it could behave as if `-L` was set and skip genome chromosomes with no input records |
+| `src/utils/Contexts/ContextBase.cpp` | Initialize `_isCram` | Default output is normal BAM unless input detection marks it as CRAM |
+| `src/utils/bedFile/bedFile.cpp` | Initialize `_lineNum` | Uninitialized line counters can produce random diagnostics when legacy readers report parse/order errors |
+| `src/coverageFile/coverageFile.cpp` | Use `delete[]` for `_floatValBuf` | Valgrind found a `new[]`/`delete` mismatch in the `coverage` tool |
 
 The modified source locations include comments explaining the Windows/UCRT64
 runtime issue:
 
 ```text
-bedtools-2.31.1-patch/src/bedtools.cpp
-bedtools-2.31.1-patch/src/utils/FileRecordTools/FileReaders/InputStreamMgr.cpp
-bedtools-2.31.1-patch/src/bamToFastq/bamToFastq.cpp
-bedtools-2.31.1-patch/src/fastaFromBed/fastaFromBed.cpp
-bedtools-2.31.1-patch/src/maskFastaFromBed/maskFastaFromBed.cpp
-bedtools-2.31.1-patch/src/split/splitBed.cpp
-bedtools-2.31.1-patch/src/utils/GenomeFile/GenomeFile.cpp
-bedtools-2.31.1-patch/src/utils/Contexts/ContextClosest.cpp
-bedtools-2.31.1-patch/src/utils/Contexts/ContextCoverage.cpp
-bedtools-2.31.1-patch/src/utils/Contexts/ContextBase.cpp
-bedtools-2.31.1-patch/src/utils/Contexts/ContextIntersect.cpp
-bedtools-2.31.1-patch/src/utils/Contexts/ContextComplement.cpp
-bedtools-2.31.1-patch/src/utils/bedFile/bedFile.cpp
-bedtools-2.31.1-patch/src/coverageFile/coverageFile.cpp
+src/bedtools.cpp
+src/utils/FileRecordTools/FileReaders/InputStreamMgr.cpp
+src/bamToFastq/bamToFastq.cpp
+src/fastaFromBed/fastaFromBed.cpp
+src/maskFastaFromBed/maskFastaFromBed.cpp
+src/split/splitBed.cpp
+src/utils/GenomeFile/GenomeFile.cpp
+src/utils/Contexts/ContextClosest.cpp
+src/utils/Contexts/ContextCoverage.cpp
+src/utils/Contexts/ContextBase.cpp
+src/utils/Contexts/ContextIntersect.cpp
+src/utils/Contexts/ContextComplement.cpp
+src/utils/bedFile/bedFile.cpp
+src/coverageFile/coverageFile.cpp
 ```
 
 After these fixes, the earlier BAM field-count failures in `groupby`, `map`,
@@ -244,8 +240,6 @@ Upstream test harness adaptations:
    files when validating native Windows executables.
 2. BAM stdin tests should use bedtools' documented `-` form instead of MSYS
    pseudo paths such as `/dev/stdin`.
-3. The sort-and-naming stderr checks were revalidated with the upstream
-   `2>&1 > /dev/null | ...` pipeline. No custom stderr retry wrapper is needed.
 
 ## Potential Upstream Bugs (Not Windows-Specific)
 
@@ -295,17 +289,17 @@ path separator.
 
 One Windows path handling fix was made as part of this review:
 
-| Area | Change | Reason |
+| File | Change | Reason |
 |---|---|---|
-| `multiinter` filename helper | Replaced POSIX `basename()` use with string handling that accepts both `/` and `\` | Native Windows paths such as `C:\data\a.bed` must not be treated as a single basename |
-| `unionbedg` filename helper | Replaced POSIX `basename()` use with string handling that accepts both `/` and `\` | Same UCRT64 path separator issue |
+| `src/multiIntersectBed/multiIntersectBedMain.cpp` | Replaced POSIX `basename()` use with string handling that accepts both `/` and `\` | Native Windows paths such as `C:\data\a.bed` must not be treated as a single basename |
+| `src/unionBedGraphs/unionBedGraphsMain.cpp` | Replaced POSIX `basename()` use with string handling that accepts both `/` and `\` | Same UCRT64 path separator issue |
 
 The modified source locations include comments explaining that the change is
 for native Windows/UCRT64 path behavior:
 
 ```text
-bedtools-2.31.1-patch/src/multiIntersectBed/multiIntersectBedMain.cpp
-bedtools-2.31.1-patch/src/unionBedGraphs/unionBedGraphsMain.cpp
+src/multiIntersectBed/multiIntersectBedMain.cpp
+src/unionBedGraphs/unionBedGraphsMain.cpp
 ```
 
 The normal bedtools command path does not use a dispatcher executable that
